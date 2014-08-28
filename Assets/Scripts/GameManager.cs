@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour {
 
+	public enum GameState {
+		NotPlaying,
+		Playing
+	}
+
 	TextAsset[] levels;
 	string[] currentLevel;
 	public Transform UpSpawn, DownSpawn;
@@ -19,22 +24,45 @@ public class GameManager : MonoBehaviour {
 	int currentStep;
 	int currentSpawnPeriod;
 
+	GameState currentState;
+
 	void Start() {
 		levels = Resources.LoadAll<TextAsset>("Levels");
 		if(levels.Length > 0) {
 			currentLevel = levels[0].text.Split(' ');
 		}
-		isPlaying = true;
-		currentTime = 0.0f;
-		currentStep = 0;
-		currentSpawnPeriod = 0;
-		
+		ChangeGameState(GameState.NotPlaying);
+	}
+
+	void ChangeGameState(GameState newState) {
+		currentState = newState;
+	}
+
+	void OnGUI() {
+		if(currentState == GameState.NotPlaying) {
+			if(GUI.Button(new Rect((Screen.width / 2) - 50, (Screen.height/2)- 25, 100, 50), "Start")) {
+				ChangeGameState(GameState.Playing);
+				currentTime = 0.0f;
+				currentStep = 0;
+				currentSpawnPeriod = 0;
+				foreach(GameObject piece in pieces) {
+					pool.DestroyItem(piece);
+				}
+				pieces = new List<GameObject>();
+			}
+		}
 	}
 
 	void Update() {
-		if(isPlaying) {
+		if(IsPlaying) {
 			AttemptSpawn();
 			MovePieces();
+		}
+	}
+
+	bool IsPlaying {
+		get {
+			return currentState == GameState.Playing;
 		}
 	}
 
@@ -42,12 +70,14 @@ public class GameManager : MonoBehaviour {
 		bool stepChange = false;
 		currentTime += Time.deltaTime;
 		//If we did a beat then update the step
-		if(currentTime > Tempo) {
+		if(currentTime >= Tempo / PieceSpeed) {
 			stepChange = true;
 			currentTime = 0;
+
 		}
 		if(stepChange) {
-			if(currentSpawnPeriod == 0) {
+
+			if(currentSpawnPeriod <= 0) {
 
 				GameObject item = null;
 				if(currentStep >= currentLevel.Length) {
@@ -62,12 +92,17 @@ public class GameManager : MonoBehaviour {
 				{
 					Vector3 spawnLoc = int.Parse(items[0]) > 0 ? UpSpawn.position : DownSpawn.position;
 					item = pool.GetItem();
+					spawnLoc.x -= (item.transform.localScale.x / 2);
 					item.transform.position = spawnLoc;
 					item.SetActive(true);
 					spawnTime = Mathf.Abs(int.Parse(items[0]));
 					text = "Spawn: "; 
 				} else {
-					spawnTime = Mathf.Abs(int.Parse(items[1]));
+					if(items.Length > 1) {
+						spawnTime = Mathf.Abs(int.Parse(items[1]));
+					} else {
+						spawnTime = 1;
+					}
 					text = "Rest: ";
 				}
 
@@ -76,9 +111,10 @@ public class GameManager : MonoBehaviour {
 					pieces.Add(item);
 				}
 				currentStep += 1;
-			}
-			if(currentSpawnPeriod > 0) {
-				currentSpawnPeriod -= 1;
+			} else {
+				if(currentSpawnPeriod > 0) {
+					currentSpawnPeriod -= 1;
+				}
 			}
 		}
 	}

@@ -1,9 +1,12 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/GameManager.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Resources/Levels/Level1.txt">
     <Files>
-      <File FileName="Assets/Scripts/GameManager.cs" Line="23" Column="42" />
-      <File FileName="Assets/Scripts/ItemQueue.cs" Line="14" Column="23" />
+      <File FileName="Assets/Scripts/GameManager.cs" Line="96" Column="19" />
+      <File FileName="Assets/Scripts/ItemQueue.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/ItemController.cs" Line="7" Column="46" />
+      <File FileName="Assets/Scripts/VisualController.cs" Line="1" Column="1" />
+      <File FileName="Assets/Resources/Levels/Level1.txt" Line="1" Column="20" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

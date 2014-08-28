@@ -10,6 +10,9 @@ public class DuckController : MonoBehaviour {
 	}
 
 	Actions currentState;
+	bool endingAction = false;
+	public float Hangtime;
+	float currentHangtime;
 
 
 	void Start() {
@@ -20,9 +23,15 @@ public class DuckController : MonoBehaviour {
 	void StartAction (Actions startingAction) {
 		currentState = startingAction;
 		SetVisuals(currentState);
+		endingAction = false;
 	}
 
-	void EndAction(Actions endingAction) {
+	void ActivateHangtime() {
+		endingAction = true;
+		currentHangtime = Hangtime;
+	}
+
+	void EndAction() {
 		currentState = Actions.Walking;
 		SetVisuals(currentState);
 	}
@@ -33,22 +42,28 @@ public class DuckController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+#if UNITY_EDITOR
 		KeyCode jumpKey = KeyCode.F;
 		KeyCode duckKey = KeyCode.J;
-#if UNITY_EDITOR
 		if(Input.GetKeyUp(jumpKey) && currentState == Actions.Jump) {
-		
-			EndAction(Actions.Jump);
+			ActivateHangtime();
 		}
 		if(Input.GetKeyUp(duckKey) && currentState == Actions.Duck) {
-			EndAction(Actions.Duck);
+			ActivateHangtime();
 		}
 
-		if(Input.GetKeyDown(jumpKey)) {
+		if(Input.GetKeyDown(jumpKey) && currentState != Actions.Jump) {
 			StartAction(Actions.Jump);
-		} else if(Input.GetKeyDown(duckKey)) {
+		} else if(Input.GetKeyDown(duckKey) && currentState != Actions.Duck) {
 			StartAction(Actions.Duck);
 		}
 #endif
+		if(endingAction) {
+			currentHangtime -= Time.deltaTime;
+			if(currentHangtime <= 0){
+				endingAction = false;
+				EndAction();
+			}
+		}
 	}
 }

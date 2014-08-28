@@ -48,6 +48,7 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\DuckController.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
+     <Compile Include="Assets\Scripts\ItemController.cs" />
      <Compile Include="Assets\Scripts\ItemQueue.cs" />
      <Compile Include="Assets\Scripts\VisualController.cs" />
      <None Include="Assets\Resources\Levels\Level1.txt" />

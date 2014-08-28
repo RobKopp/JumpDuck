@@ -13,6 +13,6 @@ public class VisualController : MonoBehaviour {
 		} 
 
 		renderer.enabled = shouldSetActive;
-		collider.enabled = shouldSetActive;
+		collider2D.enabled = shouldSetActive;
 	}
 }

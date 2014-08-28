@@ -37,6 +37,7 @@
 -define:UNITY_EDITOR_OSX
 'Assets/Scripts/DuckController.cs'
 'Assets/Scripts/GameManager.cs'
+'Assets/Scripts/ItemController.cs'
 'Assets/Scripts/ItemQueue.cs'
 'Assets/Scripts/VisualController.cs'
 -r:'/Applications/Unity/Unity.app/Contents/Frameworks/Mono/lib/mono/unity/System.Runtime.Serialization.dll'
