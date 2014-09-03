@@ -12,6 +12,7 @@ public class DuckController : MonoBehaviour {
 	Actions currentState;
 	bool endingAction = false;
 	public float Hangtime;
+	float currentHangTimeValue;
 	float currentHangtime;
 
 
@@ -38,6 +39,11 @@ public class DuckController : MonoBehaviour {
 
 	void SetVisuals(Actions state) {
 		BroadcastMessage("SetState",state);
+	}
+
+	void SetHangtime(float hangTime) {
+		//Hangtime = hangTime;
+
 	}
 	
 	// Update is called once per frame

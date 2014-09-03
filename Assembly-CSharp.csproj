@@ -47,11 +47,14 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\DuckController.cs" />
+     <Compile Include="Assets\Scripts\EditorStuff\EditorControls.cs" />
+     <Compile Include="Assets\Scripts\EditorStuff\EditorPlayer.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
      <Compile Include="Assets\Scripts\ItemController.cs" />
      <Compile Include="Assets\Scripts\ItemQueue.cs" />
      <Compile Include="Assets\Scripts\VisualController.cs" />
      <None Include="Assets\Resources\Levels\Level1.txt" />
+     <None Include="Assets\Resources\Levels\TempRecording.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
