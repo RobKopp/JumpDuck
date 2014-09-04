@@ -12,9 +12,11 @@ public class GameManager : MonoBehaviour {
 
 	public GameObject Player;
 	TextAsset[] levels;
+	AudioClip[] songs;
+	Dictionary<string, AudioClip> songDict = new Dictionary<string, AudioClip>();
 	Dictionary<string,TextAsset> levelDict = new Dictionary<string, TextAsset>();
 	string[] currentLevel;
-	int currentLevelNum = 1;
+	public int currentLevelNum = 1;
 	public Transform UpSpawn, DownSpawn;
 	public ItemQueue pool;
 
@@ -33,9 +35,15 @@ public class GameManager : MonoBehaviour {
 
 	void Start() {
 		levels = Resources.LoadAll<TextAsset>("Levels");
+		songs = Resources.LoadAll<AudioClip>("Songs");
 		if(levels.Length > 0) {
 			foreach(TextAsset ta in levels) {
 				levelDict.Add(ta.name, ta);
+			}
+		}
+		if(songs.Length > 0) {
+			foreach(AudioClip s in songs) {
+				songDict.Add (s.name, s);
 			}
 		}
 		ChangeGameState(GameState.NotPlaying);
@@ -47,6 +55,9 @@ public class GameManager : MonoBehaviour {
 		string[] configOptions = levelPieces[0].Split(' ');
 		TimeStep = float.Parse(configOptions[0]);
 		PieceSpeed = float.Parse(configOptions[1]);
+		if(songDict.ContainsKey(configOptions[2])) {
+			this.audio.clip = songDict[configOptions[2]];
+		}
 		currentLevel = levelPieces[1].Split(' ');
 	}
 	
@@ -65,6 +76,9 @@ public class GameManager : MonoBehaviour {
 				}
 				pieces = new List<GameObject>();
 				LoadLevel (currentLevelNum);
+				if(this.audio.clip != null) {
+					this.audio.Play();
+				}
 			}
 		}
 	}
@@ -97,7 +111,6 @@ public class GameManager : MonoBehaviour {
 		}
 		if(stepChange) {
 			GameObject item = null;
-			Debug.Log (itemPos);
 			Vector3 spawnLoc = itemPos > 0 ? UpSpawn.position : DownSpawn.position;
 			item = pool.GetItem();
 			spawnLoc.x -= (item.transform.localScale.x / 2);

@@ -29,6 +29,9 @@ public class EditorPlayer : MonoBehaviour {
 	void OnGUI() {
 		if(currentState == GameManager.GameState.NotPlaying) {
 			if(GUI.Button(new Rect((Screen.width / 2) - 100, (Screen.height/2)- 150, 100, 50), "Test")) {
+				if(this.audio.clip != null) {
+					this.audio.Play();
+				}
 				ChangeGameState(GameManager.GameState.Playing);
 			}
 
@@ -86,6 +89,9 @@ public class EditorPlayer : MonoBehaviour {
 		}else if(currentState == GameManager.GameState.WaitingToRecord) {
 			if(Input.GetKeyDown(KeyCode.Space)) {
 				ChangeGameState(GameManager.GameState.Recording);
+				if(this.audio.clip != null) {
+					this.audio.Play();
+				}
 			}
 
 		} else if(currentState == GameManager.GameState.Recording) {

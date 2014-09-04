@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using UnityEditor;
@@ -20,6 +20,8 @@ public class EditorControls : MonoBehaviour {
 	float oldTimeStep = 0;
 
 	public string LevelName;
+
+	private Dictionary<string, AudioClip> loadedSongs = new Dictionary<string, AudioClip>();
 
 	public void Update() {
 		//We changed one
@@ -60,7 +62,8 @@ public class EditorControls : MonoBehaviour {
 
 		string serializedLevel = string.Join(" ",items);
 		Debug.Log ("Writing Level..."+levelName);
-		string configOptions = TimeStep + " " + PieceSpeed;
+		string audioName = this.audio.clip != null ? " " + this.audio.clip.name : "";
+		string configOptions = TimeStep + " " + PieceSpeed + audioName;
 		sw.WriteLine(configOptions);
 		sw.Write (serializedLevel);
 		sw.Flush();
@@ -79,6 +82,15 @@ public class EditorControls : MonoBehaviour {
 		sr.Close();
 		this.TimeStep = float.Parse(configOptions[0]);
 		this.PieceSpeed = float.Parse(configOptions[1]);
+		AudioClip song = null;
+		if(loadedSongs.ContainsKey(configOptions[2])) {
+			song = loadedSongs[configOptions[2]];
+		} else {
+			song = Resources.Load<AudioClip>("Songs/"+configOptions[2]);
+			loadedSongs.Add(configOptions[2], song);
+		}
+
+		this.audio.clip = song;
 		oldTimeStep = TimeStep;
 		oldPieceSpeed = PieceSpeed;
 		string[] levelItems = level.Split(' ');
