@@ -21,7 +21,6 @@ public class ItemQueue : MonoBehaviour {
 	public void DestroyItem(GameObject item) {
 		item.SetActive(false);
 		pool.Enqueue(item);
-
 	}
 	
 }

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 
 Project("{5CA22D57-DED7-64A0-20F0-FF23B3449A81}") = "JumpDuck", "Assembly-CSharp.csproj", "{D1A9CC1F-0871-67A2-F6EC-6FB8208C00D0}"
 EndProject
-Project("{5CA22D57-DED7-64A0-20F0-FF23B3449A81}") = "JumpDuck", "Assembly-CSharp-Editor.csproj", "{495BC061-BAE4-421B-AA91-FE99263BA81C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,15 +13,11 @@ Global
 		{D1A9CC1F-0871-67A2-F6EC-6FB8208C00D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D1A9CC1F-0871-67A2-F6EC-6FB8208C00D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D1A9CC1F-0871-67A2-F6EC-6FB8208C00D0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{495BC061-BAE4-421B-AA91-FE99263BA81C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{495BC061-BAE4-421B-AA91-FE99263BA81C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{495BC061-BAE4-421B-AA91-FE99263BA81C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{495BC061-BAE4-421B-AA91-FE99263BA81C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-																																				GlobalSection(MonoDevelopProperties) = preSolution
+																																																										GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
 		Policies = $0
 		$0.TextStylePolicy = $1

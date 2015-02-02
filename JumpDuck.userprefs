@@ -2,16 +2,9 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/GameManager.cs">
     <Files>
-      <File FileName="Assets/Scripts/EditorStuff/EditorControls.cs" Line="65" Column="74" />
-      <File FileName="Assets/Scripts/EditorStuff/EditorPlayer.cs" Line="1" Column="1" />
-      <File FileName="Assets/Scripts/GameManager.cs" Line="19" Column="9" />
-      <File FileName="Assets/Scripts/DuckController.cs" Line="1" Column="1" />
-      <File FileName="Assets/Scripts/ItemQueue.cs" Line="1" Column="1" />
-      <File FileName="Assets/Scripts/ItemController.cs" Line="1" Column="1" />
-      <File FileName="Assets/Scripts/VisualController.cs" Line="1" Column="1" />
-      <File FileName="Assets/Resources/Levels/Level1.txt" Line="2" Column="278" />
-      <File FileName="../SpeedBlock/Assets/Scripts/LevelEditor/LevelRoot.cs" Line="1" Column="1" />
-      <File FileName="Assets/Editor/LevelRootEditor.cs" Line="1" Column="1" />
+      <File FileName="Assets/Scripts/GameManager.cs" Line="54" Column="2" />
+      <File FileName="Assets/Scripts/DuckController.cs" Line="16" Column="30" />
+      <File FileName="Assets/Scripts/ItemController.cs" Line="29" Column="69" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

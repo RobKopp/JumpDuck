@@ -1,27 +1,60 @@
 ﻿using UnityEngine;
+
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour {
 
+	[System.Serializable]
+	public class Level
+	{
+		public int MaxTempo;
+		public int MinTempo;
+		public float TimeStep;
+		public float TimeDeviance;
+		public AnimationCurve levelCurve;
+	}
+
 	public enum GameState {
 		NotPlaying,
 		Playing,
+		TitleScreen,
+		EndScreen,
 		WaitingToRecord,
 		Recording
 	}
 
 	public GameObject Player;
-	TextAsset[] levels;
+	public TextMesh StatusText;
+	public TextMesh StartText;
+	public TextMesh ScoreText;
+	public GameObject StartButton;
+	public TextMesh EndText;
 	AudioClip[] songs;
-	Dictionary<string, AudioClip> songDict = new Dictionary<string, AudioClip>();
-	Dictionary<string,TextAsset> levelDict = new Dictionary<string, TextAsset>();
-	string[] currentLevel;
-	public int currentLevelNum = 1;
-	public Transform UpSpawn, DownSpawn;
+
+	public Level[] LevelCurves;
+	
+
+	Transform UpSpawn, DownSpawn;
+
+	public Transform Spawn;
+	public int currentLevelNum = 0;
+	int nextLevelNum = 0;
+
 	public ItemQueue pool;
 
 	public float PieceSpeed;
 	public float TimeStep;
+
+	public float Tempo;
+
+	public int MaxTempo;
+	public int MinTempo;
+
+	public int TempoThreshold;
+
+	public float TempoMultiplierDeviance;
+
+	int currentScore;
 
 	float distance;
 
@@ -29,65 +62,114 @@ public class GameManager : MonoBehaviour {
 	
 	
 	float currentTime;
-	int currentStep;
+	public int currentStep;
+	int nextTempoChangeStep;
+	public int nextWarningStep;
+	public int WarningTime;
+	int currentCurvePoint;
 
 	GameState currentState;
 
+	Dictionary<GameState,GameState> stateChanges =  new Dictionary<GameState, GameState>()
+	{
+		{ GameState.EndScreen, GameState.TitleScreen},
+		{ GameState.TitleScreen, GameState.Playing}
+	};
+
 	void Start() {
-		levels = Resources.LoadAll<TextAsset>("Levels");
-		songs = Resources.LoadAll<AudioClip>("Songs");
-		if(levels.Length > 0) {
-			foreach(TextAsset ta in levels) {
-				levelDict.Add(ta.name, ta);
-			}
-		}
-		if(songs.Length > 0) {
-			foreach(AudioClip s in songs) {
-				songDict.Add (s.name, s);
-			}
-		}
-		ChangeGameState(GameState.NotPlaying);
+		Player.SendMessage("Wait");
+		ChangeGameState(GameState.TitleScreen);
+		currentScore = 0;
+		ScoreText.text = currentScore.ToString();;
 	}
 
-	void LoadLevel(int levelNum) {
-		string levelText = levelDict["Level"+levelNum].text;
-		string[] levelPieces = levelText.Split('\n');
-		string[] configOptions = levelPieces[0].Split(' ');
-		TimeStep = float.Parse(configOptions[0]);
-		PieceSpeed = float.Parse(configOptions[1]);
-		if(songDict.ContainsKey(configOptions[2])) {
-			this.audio.clip = songDict[configOptions[2]];
+	void StartGame() {
+		currentScore = 0;
+		ScoreText.text = currentScore.ToString();;
+		ProceedToNextLevel();
+		distance = (Player.transform.position - Spawn.position).magnitude;
+		CheckTempoChange();
+		EndText.gameObject.SetActive(false);
+		Player.SendMessage("Initialize");
+		foreach(GameObject piece in pieces) {
+			pool.DestroyItem(piece);
 		}
-		currentLevel = levelPieces[1].Split(' ');
+		pieces = new List<GameObject>();
+		StartText.gameObject.SetActive(false);
+		if(this.audio.clip != null) {
+			this.audio.Play();
+		}
+		
+		ChangeGameState(GameState.Playing);
 	}
 	
-	void ChangeGameState(GameState newState) {
-		currentState = newState;
+	void EndGame() {
+		ChangeGameState(GameState.EndScreen);
+		EndText.gameObject.SetActive(true);
+		EndText.text = "Score: " + currentScore;
+		StartButton.gameObject.SetActive(true);
+		
+	}
+	
+	void Continue() {
+		ChangeGameState(stateChanges[currentState]);
 	}
 
-	void OnGUI() {
-		if(currentState == GameState.NotPlaying) {
-			if(GUI.Button(new Rect((Screen.width / 2) - 50, (Screen.height/2)- 25, 100, 50), "Start")) {
-				ChangeGameState(GameState.Playing);
-				currentTime = 0.0f;
-				currentStep = 0;
-				foreach(GameObject piece in pieces) {
-					pool.DestroyItem(piece);
-				}
-				pieces = new List<GameObject>();
-				LoadLevel (currentLevelNum);
-				if(this.audio.clip != null) {
-					this.audio.Play();
-				}
-			}
+	void ChangeGameState(GameState newState) {
+
+		switch(currentState) {
+			case GameState.EndScreen:
+				EndText.gameObject.SetActive(false);
+				StartButton.SetActive(false);
+				ScoreText.gameObject.SetActive(false);
+				break;
 		}
+
+		switch(newState) {
+			case GameState.TitleScreen:
+				StartText.gameObject.SetActive(true);
+				break;
+			
+			case GameState.Playing:
+				ScoreText.gameObject.SetActive(true);
+				break;
+		}
+		currentState = newState;
+
 	}
+
+	void CalculatePieceSpeed() {
+		float timesPerSecond = Tempo / 60.0f;
+		TimeStep = 1/timesPerSecond;
+		PieceSpeed = distance * timesPerSecond;
+	}
+
+
 
 	void Update() {
+
 		if(IsPlaying) {
 			AttemptSpawn();
+			CheckTempoChange();
 			MovePieces();
+
+		} else if(currentState == GameState.TitleScreen) {
+			bool beginGame = false;
+			if(Input.touchCount > 0) {
+				if(Input.touches[0].phase == TouchPhase.Began) {
+					beginGame = true;
+				}
+			}
+
+			if(Input.GetKeyUp(KeyCode.Space)) {
+				beginGame = true;
+			}
+
+			if(beginGame) {
+				StartGame();
+			}
 		}
+
 	}
 
 	bool IsPlaying {
@@ -97,32 +179,120 @@ public class GameManager : MonoBehaviour {
 	}
 
 	void AttemptSpawn() {
-		bool stepChange = false;
-		currentTime += Time.deltaTime;
-		if(currentStep >= currentLevel.Length) {
-			currentStep = 0;
-		}
-		string currentItem = currentLevel[currentStep];
 
-		float itemPos = float.Parse(currentItem);
-		if(currentTime >=  Mathf.Abs(itemPos) * TimeStep) {
-			stepChange = true;
+		currentTime += Time.deltaTime;
+
+		if(currentTime >=  TimeStep) {
 			currentTime = 0;
-		}
-		if(stepChange) {
+			currentStep += 1;
 			GameObject item = null;
-			Vector3 spawnLoc = itemPos > 0 ? UpSpawn.position : DownSpawn.position;
+
+			item = GetSpawnedItem();
+			if(item != null) {
+
+				ItemController controller = item.GetComponent<ItemController>();
+				controller.Initialize(PieceSpeed, Player, this);
+
+				item.SetActive(true);
+				item.SendMessage("SetSpeed", PieceSpeed);
+
+				if(item != null) {
+					pieces.Add(item);
+				}
+			}
+
+		}
+	}
+
+	GameObject GetSpawnedItem() {
+		GameObject item = null;
+
+		int pieceWeight = 350;
+		if(Tempo < TempoThreshold) {
+			pieceWeight = 450;
+		}
+
+		int blankWeight = 1000 - (2*pieceWeight);
+
+		int[] weights = new int[3] {pieceWeight, blankWeight, pieceWeight};
+		int roll = Random.Range (0,(pieceWeight * 2) + blankWeight);
+		int counter = 0;
+		int index;
+
+		for(index = 0; index < weights.Length; ++index) {
+			counter += weights[index];
+			if(counter > roll) {
+				break;
+			}
+		}
+
+		if(index - 1 != 0) {
+			Vector3 spawnLoc = Spawn.position;
 			item = pool.GetItem();
+			spawnLoc.y = index - 1;
 			spawnLoc.x -= (item.transform.localScale.x / 2);
 			item.transform.position = spawnLoc;
-			item.SetActive(true);
-			item.SendMessage("SetSpeed", PieceSpeed);
-
-			if(item != null) {
-				pieces.Add(item);
-			}
-			currentStep += 1;
 		}
+
+		return item;
+
+	}
+
+	void CheckTempoChange() {
+
+		//Use the animation Curve to figure out what to use for the next tempo
+		if(currentStep >= nextTempoChangeStep) {
+
+			Level level = LevelCurves[currentLevelNum];
+			AnimationCurve curve = level.levelCurve;
+
+			Keyframe curveKeyFrame = curve.keys[currentCurvePoint];
+			//Change the tempo and figure out when to change next
+
+			int newTempo = (int)Mathf.Lerp(level.MinTempo,level.MaxTempo,curveKeyFrame.value);
+
+			Tempo = newTempo;
+
+
+			int nextKey = currentCurvePoint + 1;
+			float diff = 0.1f;
+			if(nextKey < curve.keys.Length) {
+				diff = (curve.keys[nextKey].time - curveKeyFrame.time);
+			}
+			float newStep = (diff/0.1f)*level.TimeStep ;
+			nextTempoChangeStep += (int)Random.Range (newStep - level.TimeDeviance,newStep + level.TimeDeviance);
+			nextWarningStep = nextTempoChangeStep - WarningTime;
+			CalculatePieceSpeed();
+			foreach(GameObject piece in pieces) {
+				piece.SendMessage("SetSpeed", PieceSpeed);
+			}
+			currentCurvePoint += 1;
+			if(currentCurvePoint >= curve.keys.Length) {
+				ProceedToNextLevel();
+			}
+		} else if(currentStep >= nextWarningStep) {
+			Level level = LevelCurves[currentLevelNum];
+			int lastPoint = currentCurvePoint - 1 < 0 ? level.levelCurve.keys.Length - 1 : currentCurvePoint - 1;
+
+			int inTime = nextTempoChangeStep - currentStep;
+			string status = level.levelCurve.keys[currentCurvePoint].value - level.levelCurve.keys[lastPoint].value > 0 ? "Speeding Up! " +  inTime : "Slow It Down " + inTime;
+			StatusText.SendMessage("ShowStatus", status);
+		}
+
+	}
+
+	void ProceedToNextLevel() {
+		currentLevelNum = nextLevelNum;
+		nextLevelNum = Random.Range (0,LevelCurves.Length);
+		currentTime = 0.0f;
+		currentStep = 0;
+		nextTempoChangeStep = 0;
+		currentCurvePoint = 0;
+	}
+
+	void DestroyPiece(GameObject piece) {
+		pieces.Remove(piece);
+		pool.DestroyItem(piece);
 	}
 
 	void MovePieces() {
@@ -143,5 +313,10 @@ public class GameManager : MonoBehaviour {
 				pieces.Remove(piece);
 			}
 		}
+	}
+
+	public void ScorePiece() {
+		currentScore += 1;
+		ScoreText.text = currentScore.ToString();
 	}
 }
