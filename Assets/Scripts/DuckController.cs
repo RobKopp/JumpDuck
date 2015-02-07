@@ -13,6 +13,8 @@ public class DuckController : MonoBehaviour {
 
 	public bool GodMode;
 
+	public GameObject GameManager;
+
 	public Actions currentState;
 	
 	public float JumpSpeed;
@@ -20,9 +22,15 @@ public class DuckController : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D collider) {
 		if(!GodMode) {
-			GameObject.FindGameObjectWithTag("GameController").SendMessage("EndGame");
-			StartAction(Actions.Dead);
-			gameObject.particleSystem.Play();
+			GameObject item = collider.gameObject;
+			if(item.tag == "Item") {
+				GameManager.SendMessage("EndGame");
+				StartAction(Actions.Dead);
+				gameObject.particleSystem.Play();
+			} else if(item.tag == "GoldPiece"){
+				GameManager.SendMessage("CountScore",1);
+				GameManager.SendMessage("DestroyPiece",item);
+			}
 		}
 	}
 
@@ -83,15 +91,17 @@ public class DuckController : MonoBehaviour {
 
 	#else
 			if(Input.touchCount > 0) {
-				Touch firstTouch = Input.GetTouch(0);
-				if(firstTouch.phase == TouchPhase.Began) {
-					if(firstTouch.position.x > Screen.width /2){
-						StartAction(Actions.Jump);
-					} else {
-						StartAction(Actions.Duck);
+				foreach(Touch touch in Input.touches) {
+					if(touch.phase == TouchPhase.Began) {
+						if(touch.position.x > Screen.width /2){
+							StartAction(Actions.Duck);
+						} else {
+							StartAction(Actions.Jump);
+						}
+						//If its ending and its the last touch, end the action
+					} else if((touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled) && Input.touchCount <= 1) {
+						EndAction();
 					}
-				} else if(firstTouch.phase == TouchPhase.Ended || firstTouch.phase == TouchPhase.Canceled) {
-					EndAction();
 				}
 			}
 	#endif

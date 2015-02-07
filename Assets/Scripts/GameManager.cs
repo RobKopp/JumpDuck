@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 using System.Collections.Generic;
+using UnityEngine.Advertisements;
 
 public class GameManager : MonoBehaviour {
 
@@ -56,12 +57,17 @@ public class GameManager : MonoBehaviour {
 
 	int currentScore;
 
+	int endCount = 0;
+
 	float distance;
 
 	List<GameObject> pieces = new List<GameObject>();
 	
 	
 	float currentTime;
+	float bonusTime;
+	bool shouldSpawnBonus = false;
+	GameObject nextItem;
 	public int currentStep;
 	int nextTempoChangeStep;
 	public int nextWarningStep;
@@ -69,6 +75,7 @@ public class GameManager : MonoBehaviour {
 	int currentCurvePoint;
 
 	GameState currentState;
+	
 
 	Dictionary<GameState,GameState> stateChanges =  new Dictionary<GameState, GameState>()
 	{
@@ -80,7 +87,15 @@ public class GameManager : MonoBehaviour {
 		Player.SendMessage("Wait");
 		ChangeGameState(GameState.TitleScreen);
 		currentScore = 0;
-		ScoreText.text = currentScore.ToString();;
+		ScoreText.text = currentScore.ToString();
+		if(Advertisement.isSupported) {
+			Advertisement.allowPrecache = true;
+#if UNITY_IOS
+			Advertisement.Initialize("131624426",true);
+#elif UNITY_ANDROID
+			Advertisement.Initialize("131624427",true);
+#endif
+		}
 	}
 
 	void StartGame() {
@@ -104,14 +119,29 @@ public class GameManager : MonoBehaviour {
 	}
 	
 	void EndGame() {
+		endCount += 1;
 		ChangeGameState(GameState.EndScreen);
 		EndText.gameObject.SetActive(true);
-		EndText.text = "Score: " + currentScore;
+		EndText.text = "SCORE: " + currentScore;
 		StartButton.gameObject.SetActive(true);
 		
 	}
 	
 	void Continue() {
+		if(endCount % 3 == 0){
+			if(Advertisement.isInitialized && Advertisement.isReady() && !Advertisement.isShowing) {
+				ShowOptions options = new ShowOptions();
+				options.resultCallback = this.AdResultCallback;
+				options.pause = true;
+				Advertisement.Show(null, options);
+			} 
+
+		} else {
+			performContinue();
+		}
+	}
+
+	void performContinue() {
 		ChangeGameState(stateChanges[currentState]);
 	}
 
@@ -144,6 +174,10 @@ public class GameManager : MonoBehaviour {
 		PieceSpeed = distance * timesPerSecond;
 	}
 
+	void AdResultCallback(ShowResult result) {
+		performContinue();
+
+	}
 
 
 	void Update() {
@@ -181,24 +215,52 @@ public class GameManager : MonoBehaviour {
 	void AttemptSpawn() {
 
 		currentTime += Time.deltaTime;
+		bonusTime += Time.deltaTime;
 
 		if(currentTime >=  TimeStep) {
 			currentTime = 0;
 			currentStep += 1;
-			GameObject item = null;
 
-			item = GetSpawnedItem();
-			if(item != null) {
+			if(nextItem != null) {
 
-				ItemController controller = item.GetComponent<ItemController>();
+				ItemController controller = nextItem.GetComponent<ItemController>();
 				controller.Initialize(PieceSpeed, Player, this);
 
-				item.SetActive(true);
-				item.SendMessage("SetSpeed", PieceSpeed);
+				nextItem.SetActive(true);
+				nextItem.SendMessage("SetSpeed", PieceSpeed);
 
-				if(item != null) {
-					pieces.Add(item);
+				if(nextItem != null) {
+					pieces.Add(nextItem);
 				}
+			}
+			nextItem = GetSpawnedItem();
+			shouldSpawnBonus = Random.value < 0.5f ? true : false;
+		} else 	if(shouldSpawnBonus && (bonusTime >= TimeStep / 2.0f)){
+			bonusTime = 0.0f;
+			GameObject bonus = pool.GetItem("GoldPiece");
+
+			ItemController controller = bonus.GetComponent<ItemController>();
+			controller.Initialize(PieceSpeed, Player, this);
+
+
+			Vector3 spawnLoc = Spawn.position;
+			float yLoc;
+			if(currentTime < TimeStep) {
+				yLoc = Random.Range(-1,2);
+			} else if(nextItem == null) {
+				yLoc = Random.Range(-1,2);
+			} else {
+				yLoc = nextItem.transform.position.y;
+			}
+			spawnLoc.y = yLoc;
+//			spawnLoc.x -= (bonus.transform.localScale.x / 2);
+			bonus.transform.position = spawnLoc;
+
+			bonus.SetActive(true);
+			bonus.SendMessage("SetSpeed", PieceSpeed);
+			
+			if(bonus != null) {
+				pieces.Add(bonus);
 			}
 
 		}
@@ -228,9 +290,9 @@ public class GameManager : MonoBehaviour {
 
 		if(index - 1 != 0) {
 			Vector3 spawnLoc = Spawn.position;
-			item = pool.GetItem();
-			spawnLoc.y = index - 1;
-			spawnLoc.x -= (item.transform.localScale.x / 2);
+			item = pool.GetItem("Item");
+			spawnLoc.y = (index - 1) * 1.8f;
+//			spawnLoc.x += (item.transform.localScale.x / 2);
 			item.transform.position = spawnLoc;
 		}
 
@@ -239,6 +301,19 @@ public class GameManager : MonoBehaviour {
 	}
 
 	void CheckTempoChange() {
+
+		if(currentStep >= nextWarningStep) {
+			Level level = LevelCurves[currentLevelNum];
+			int lastPoint = currentCurvePoint - 1 < 0 ? level.levelCurve.keys.Length - 1 : currentCurvePoint - 1;
+			
+			int inTime = nextTempoChangeStep - currentStep;
+			
+			
+
+			string status = level.levelCurve.keys[currentCurvePoint].value - level.levelCurve.keys[lastPoint].value > 0 ? "Speeding Up " +  inTime : "Slow It Down " + inTime;
+			status = inTime == 0 ? "Go!" : status;
+			StatusText.SendMessage("ShowStatus", status);
+		}
 
 		//Use the animation Curve to figure out what to use for the next tempo
 		if(currentStep >= nextTempoChangeStep) {
@@ -270,14 +345,9 @@ public class GameManager : MonoBehaviour {
 			if(currentCurvePoint >= curve.keys.Length) {
 				ProceedToNextLevel();
 			}
-		} else if(currentStep >= nextWarningStep) {
-			Level level = LevelCurves[currentLevelNum];
-			int lastPoint = currentCurvePoint - 1 < 0 ? level.levelCurve.keys.Length - 1 : currentCurvePoint - 1;
+		} 
 
-			int inTime = nextTempoChangeStep - currentStep;
-			string status = level.levelCurve.keys[currentCurvePoint].value - level.levelCurve.keys[lastPoint].value > 0 ? "Speeding Up! " +  inTime : "Slow It Down " + inTime;
-			StatusText.SendMessage("ShowStatus", status);
-		}
+
 
 	}
 
@@ -285,6 +355,10 @@ public class GameManager : MonoBehaviour {
 		currentLevelNum = nextLevelNum;
 		nextLevelNum = Random.Range (0,LevelCurves.Length);
 		currentTime = 0.0f;
+		if(nextItem == null) {
+			nextItem = GetSpawnedItem();
+		}
+		bonusTime = 0.0f;
 		currentStep = 0;
 		nextTempoChangeStep = 0;
 		currentCurvePoint = 0;
@@ -299,7 +373,8 @@ public class GameManager : MonoBehaviour {
 		List<GameObject> garbageList = null;
 		foreach(GameObject piece in pieces) {
 			piece.SendMessage("Move");
-			if(piece.transform.position.x < 0) {
+			Vector2 pos = Camera.main.WorldToScreenPoint(piece.transform.position);
+			if(pos.x < 0) {
 				pool.DestroyItem(piece);
 				if(garbageList == null) {
 					garbageList = new List<GameObject>();
@@ -318,5 +393,9 @@ public class GameManager : MonoBehaviour {
 	public void ScorePiece() {
 		currentScore += 1;
 		ScoreText.text = currentScore.ToString();
+	}
+
+	public void CountScore(int pointAmount) {
+		currentScore += pointAmount;
 	}
 }

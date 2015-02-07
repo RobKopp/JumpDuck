@@ -50,14 +50,25 @@
      <Compile Include="Assets\Scripts\ContinueButton.cs" />
      <Compile Include="Assets\Scripts\DuckController.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
+     <Compile Include="Assets\Scripts\GoldPieceController.cs" />
      <Compile Include="Assets\Scripts\ItemController.cs" />
      <Compile Include="Assets\Scripts\ItemQueue.cs" />
+     <Compile Include="Assets\Scripts\ScreenBoundsMover.cs" />
      <Compile Include="Assets\Scripts\StatusTextController.cs" />
      <Compile Include="Assets\Scripts\TextAlpha.cs" />
      <Compile Include="Assets\Scripts\VisualController.cs" />
+     <None Include="Assets\Plugins\Android\unityads\proguard-project.txt" />
+     <None Include="Assets\Plugins\Android\unityads\build.xml" />
      <None Include="Assets\Resources\Levels\Level1 old.txt" />
      <None Include="Assets\Resources\Levels\Level1.txt" />
+     <None Include="Assets\link.xml" />
      <None Include="Assets\Resources\Levels\TempRecording.txt" />
+     <None Include="Assets\Plugins\Android\unityads\res\values\strings.xml" />
+     <None Include="Assets\Plugins\Android\unityads\AndroidManifest.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
+      <Project>{05C02566-0226-A433-C200-FF20C757FAA9}</Project>      <Name>Assembly-CSharp-firstpass</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
