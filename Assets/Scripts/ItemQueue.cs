@@ -17,7 +17,9 @@ public class ItemQueue : MonoBehaviour {
 		} else {
 			foreach(GameObject item in items) {
 				if(item.tag == type) {
-					return Instantiate(item) as GameObject;
+					GameObject newItem = Instantiate(item) as GameObject;
+					newItem.SetActive(false);
+					return newItem;
 				}
 			}
 			return null;

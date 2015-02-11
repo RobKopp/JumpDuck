@@ -235,7 +235,9 @@ public class GameManager : MonoBehaviour {
 			}
 			nextItem = GetSpawnedItem();
 			shouldSpawnBonus = Random.value < 0.5f ? true : false;
-		} else 	if(shouldSpawnBonus && (bonusTime >= TimeStep / 2.0f)){
+		}
+
+		if(shouldSpawnBonus && (bonusTime >= TimeStep / 2.0f)){
 			bonusTime = 0.0f;
 			GameObject bonus = pool.GetItem("GoldPiece");
 
@@ -246,14 +248,16 @@ public class GameManager : MonoBehaviour {
 			Vector3 spawnLoc = Spawn.position;
 			float yLoc;
 			if(currentTime < TimeStep) {
+				Debug.Log ("Were Not spawning on a piece!");
 				yLoc = Random.Range(-1,2);
 			} else if(nextItem == null) {
+				Debug.Log ("No piece to be found!");
 				yLoc = Random.Range(-1,2);
 			} else {
-				yLoc = nextItem.transform.position.y;
+				Debug.Log ("Were spawning it on a piece!");
+				yLoc = -nextItem.transform.position.y;
 			}
 			spawnLoc.y = yLoc;
-//			spawnLoc.x -= (bonus.transform.localScale.x / 2);
 			bonus.transform.position = spawnLoc;
 
 			bonus.SetActive(true);
